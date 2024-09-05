@@ -1,14 +1,18 @@
 import { ApolloServer } from '@apollo/server';
-import { startStandaloneServer } from '@apollo/server/standalone';
-import { Neo4jGraphQL } from "@neo4j/graphql";
-import neo4j from "neo4j-driver";
+import { expressMiddleware } from '@apollo/server/express4';
+import express from 'express';
+import { Neo4jGraphQL } from '@neo4j/graphql';
+import neo4j from 'neo4j-driver';
 import dotenv from 'dotenv';
+
+// Load environment variables (for local development)
 dotenv.config();
 
-// Load environment variables (ensure to configure your environment variables properly)
+// Load environment variables from Cloud Run or dotenv
 const NEO4J_URL = process.env.NEO4J_URL;
 const NEO4J_USERNAME = process.env.NEO4J_USERNAME;
 const NEO4J_PASSWORD = process.env.NEO4J_PASSWORD;
+const PORT = process.env.PORT || 8080; // Google Cloud Run dynamically assigns the port
 
 const typeDefs = `#graphql
 type Meeting {
@@ -142,18 +146,32 @@ type User {
 `;
 
 const driver = neo4j.driver(
-    NEO4J_URL,
-    neo4j.auth.basic(NEO4J_USERNAME, NEO4J_PASSWORD)
+  NEO4J_URL,
+  neo4j.auth.basic(NEO4J_USERNAME, NEO4J_PASSWORD)
 );
 
-const neoSchema = new Neo4jGraphQL({ typeDefs, driver });
+const main = async () => {
+  const neoSchema = new Neo4jGraphQL({ typeDefs, driver });
 
-const server = new ApolloServer({
+  const app = express();
+
+  // Create Apollo Server instance
+  const server = new ApolloServer({
     schema: await neoSchema.getSchema(),
-});
+  });
 
-const { url } = await startStandaloneServer(server, {
-    listen: { port: 4000 },
-});
+  // Start the server with Express middleware
+  await server.start();
+  app.use(express.json());
+  app.use('/graphql', expressMiddleware(server));
 
-console.log(`🚀 Server ready at ${url}`);
+  // Start the Express server on the provided port
+  app.listen(PORT, () => {
+    console.log(`🚀 Server ready at http://localhost:${PORT}/graphql`);
+  });
+}
+
+// Start the Apollo server
+main().catch(err => {
+  console.error('Failed to start server', err);
+});
