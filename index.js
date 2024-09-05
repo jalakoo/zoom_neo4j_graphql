@@ -2,121 +2,148 @@ import { ApolloServer } from '@apollo/server';
 import { startStandaloneServer } from '@apollo/server/standalone';
 import { Neo4jGraphQL } from "@neo4j/graphql";
 import neo4j from "neo4j-driver";
+import dotenv from 'dotenv';
+dotenv.config();
+
+// Load environment variables (ensure to configure your environment variables properly)
+const NEO4J_URL = process.env.NEO4J_URL;
+const NEO4J_USERNAME = process.env.NEO4J_USERNAME;
+const NEO4J_PASSWORD = process.env.NEO4J_PASSWORD;
 
 const typeDefs = `#graphql
-    type Meeting {
-    duration: BigInt!
-    id: BigInt!
-    meeting_end_time: String
-    meeting_host_email: String
-    meeting_host_id: String
-    meeting_id: BigInt
-    meeting_start_time: String
-    meeting_topic: String
-    meeting_uuid: String
-    participantsAttended: [Participant!]!
-        @relationship(type: "ATTENDED", direction: IN)
-    participants_count: BigInt!
-    profilesHad: [Profile!]! @relationship(type: "HAD", direction: IN)
-    start_time: DateTime!
-    summary_created_time: String
-    summary_end_time: String
-    summary_last_modified_time: String
-    summary_overview: String
-    summary_start_time: String
-    summary_title: String
-    topic: String!
-    total_minutes: BigInt!
-    type: BigInt!
-    uuid: String!
-    }
+type Meeting {
+	duration: BigInt!
+	hasRecordings: [Recording!]! @relationship(type: "HAS", direction: OUT)
+	id: BigInt!
+	meeting_end_time: String
+	meeting_host_email: String
+	meeting_host_id: String
+	meeting_id: BigInt
+	meeting_start_time: String
+	meeting_topic: String
+	meeting_uuid: String
+	participantsAttended: [Participant!]! @relationship(type: "ATTENDED", direction: IN)
+	participants_count: BigInt!
+	start_time: DateTime!
+	summary_created_time: String
+	summary_end_time: String
+	summary_last_modified_time: String
+	summary_overview: String
+	summary_start_time: String
+	summary_title: String
+	topic: String!
+	total_minutes: BigInt!
+	type: BigInt!
+	usersHosted: [User!]! @relationship(type: "HOSTED", direction: IN)
+	uuid: String!
+}
 
-    type Participant {
-    attendedMeetings: [Meeting!]! @relationship(type: "ATTENDED", direction: OUT)
-    audio_call: [String]!
-    audio_quality: String!
-    camera: String
-    connection_type: String!
-    customer_key: String!
-    data_center: String!
-    device: String!
-    device_name: String!
-    domain: String!
-    email: String
-    from_sip_uri: String!
-    full_data_center: String!
-    groupId: String!
-    harddisk_id: String!
-    health: String!
-    id: String!
-    internal_ip_addresses: [String]
-    ip_address: String!
-    join_time: DateTime!
-    leave_reason: String!
-    leave_time: DateTime!
-    location: String!
-    mac_addr: String!
-    microphone: String
-    network_type: String!
-    os: String!
-    os_version: String!
-    participant_user_id: String
-    participant_uuid: String!
-    pc_name: String!
-    recording: Boolean!
-    registrant_id: String!
-    role: String!
-    screen_share_quality: String!
-    share_application: Boolean!
-    share_desktop: Boolean!
-    share_whiteboard: Boolean!
-    sip_uri: String!
-    speaker: String
-    status: String!
-    user_id: String!
-    user_name: String!
-    version: String!
-    video_quality: String!
-    }
+type Participant {
+	attendedMeetings: [Meeting!]! @relationship(type: "ATTENDED", direction: OUT)
+	audio_call: [String]!
+	audio_quality: String!
+	camera: String
+	connection_type: String
+	customer_key: String!
+	data_center: String!
+	device: String!
+	device_name: String!
+	domain: String!
+	email: String
+	from_sip_uri: String!
+	full_data_center: String!
+	groupId: String!
+	harddisk_id: String!
+	health: String!
+	id: String!
+	internal_ip_addresses: [String]
+	ip_address: String!
+	join_time: DateTime!
+	leave_reason: String!
+	leave_time: DateTime!
+	location: String!
+	mac_addr: String!
+	microphone: String
+	network_type: String!
+	os: String!
+	os_version: String!
+	participant_user_id: String
+	participant_uuid: String!
+	pc_name: String!
+	recording: Boolean!
+	registrant_id: String!
+	role: String!
+	screen_share_quality: String!
+	share_application: Boolean!
+	share_desktop: Boolean!
+	share_whiteboard: Boolean!
+	sip_uri: String!
+	speaker: String
+	status: String!
+	user_id: String!
+	user_name: String!
+	usersIs: [User!]! @relationship(type: "IS", direction: IN)
+	version: String!
+	video_quality: String!
+}
 
-    type Profile {
-    account_id: String!
-    account_number: BigInt!
-    cluster: String!
-    cms_user_id: String!
-    created_at: DateTime!
-    dept: String!
-    display_name: String!
-    email: String!
-    first_name: String!
-    group_ids: [String]!
-    hadMeetings: [Meeting!]! @relationship(type: "HAD", direction: OUT)
-    id: String!
-    im_group_ids: [String]!
-    jid: String!
-    job_title: String!
-    language: String!
-    last_client_version: String!
-    last_login_time: DateTime!
-    last_name: String!
-    location: String!
-    login_types: [BigInt]!
-    phone_number: String!
-    pmi: BigInt!
-    role_id: String!
-    role_name: String!
-    status: String!
-    timezone: String!
-    type: BigInt!
-    use_pmi: Boolean!
-    user_created_at: DateTime!
-    verified: BigInt!
-    }
+type Recording {
+	download_url: String!
+	file_extension: String!
+	file_size: BigInt!
+	file_type: String!
+	id: String!
+	meeting_id: String!
+	meetingsHas: [Meeting!]! @relationship(type: "HAS", direction: IN)
+	play_url: String
+	recording_end: DateTime!
+	recording_start: DateTime!
+	recording_type: String!
+	status: String!
+}
+
+type User {
+	account_id: String!
+	account_number: BigInt!
+	cluster: String!
+	cms_user_id: String!
+	created_at: DateTime!
+	dept: String!
+	display_name: String!
+	email: String!
+	first_name: String!
+	group_ids: [String]!
+	hostedMeetings: [Meeting!]! @relationship(type: "HOSTED", direction: OUT)
+	id: String!
+	im_group_ids: [String]!
+	isParticipants: [Participant!]! @relationship(type: "IS", direction: OUT)
+	jid: String!
+	job_title: String!
+	language: String!
+	last_client_version: String!
+	last_login_time: DateTime!
+	last_name: String!
+	location: String!
+	login_types: [BigInt]!
+	personal_meeting_url: String!
+	phone_number: String!
+	pic_url: String!
+	pmi: BigInt!
+	role_id: String!
+	role_name: String!
+	status: String!
+	timezone: String!
+	type: BigInt!
+	use_pmi: Boolean!
+	user_created_at: DateTime!
+	vanity_url: String!
+	verified: BigInt!
+}
 `;
 
 const driver = neo4j.driver(
-    "neo4j://localhost:7687",
-    neo4j.auth.basic("neo4j", "abcd1234")
+    NEO4J_URL,
+    neo4j.auth.basic(NEO4J_USERNAME, NEO4J_PASSWORD)
 );
 
 const neoSchema = new Neo4jGraphQL({ typeDefs, driver });
