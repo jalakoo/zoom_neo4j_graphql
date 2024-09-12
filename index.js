@@ -158,6 +158,7 @@ const main = async () => {
   // Create Apollo Server instance
   const server = new ApolloServer({
     schema: await neoSchema.getSchema(),
+	introspection: true
   });
 
   // Start the server with Express middleware

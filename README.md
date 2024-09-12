@@ -2,7 +2,11 @@
 
 For deployment in a Google Cloud Run environment
 
-## LRunning
+![Workflow Diagram](media/arch_diagram.png)
+
+This is the `GraphQL Server` component of the above workflow.
+
+## Local Running
 
 ```
 npm install
