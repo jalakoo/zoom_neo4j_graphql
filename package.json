@@ -29,6 +29,7 @@
   },
   "dependencies": {
     "@apollo/server": "^4.11.0",
+    "@boundaryml/baml": "^0.55.3",
     "@neo4j/graphql": "^5.6.1",
     "dotenv": "^16.4.5",
     "graphql": "^16.9.0",
